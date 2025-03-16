@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tinder Simulator</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f8f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 400px;
+      height: 600px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      height: 80%; /* Card takes 80% of the wrapper */
+      background-color: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Card Styles */
+    .card {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      background-size: cover;
+      background-position: center;
+      border-radius: 20px;
+      position: absolute;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+
+    .card-content {
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
+      width: 100%;
+      padding: 20px;
+      color: white;
+      text-align: left;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .name {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .bio {
+      font-size: 16px;
+      margin: 5px 0 0;
+    }
+
+    /* Buttons */
+    .buttons {
+      margin-top: 20px; /* Add space between card and buttons */
+      display: flex;
+      gap: 20px;
+    }
+
+    button {
+      background-color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    button:active {
+      transform: scale(0.9);
+    }
+
+    #dislike {
+      color: #ff4757;
+      font-size: 28px;
+    }
+
+    #like {
+      color: #1e90ff;
+      font-size: 28px;
+    }
+
+    /* Match Notification */
+    .match-notification {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      display: none;
+      z-index: 10;
+    }
+
+    .match-notification h2 {
+      font-size: 36px;
+      margin: 0;
+      color: #ff6b6b;
+    }
+
+    .match-notification img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      margin: 20px 0;
+      border: 5px solid white;
+    }
+
+    .match-notification p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .match-notification .send-message {
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 12px 40px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .match-notification .send-message:hover {
+      background-color: #ff4757;
+    }
+
+    .match-notification .send-message:active {
+      transform: scale(0.95);
+    }
+
+    /* Message Simulator */
+    .message-simulator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: white;
+      display: none;
+      flex-direction: column;
+      z-index: 20;
+    }
+
+    .message-header {
+      background-color: #ff6b6b;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .message-container {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .message.received {
+      background-color: #f1f1f1;
+      align-self: flex-start;
+    }
+
+    .message.sent {
+      background-color: #ff6b6b;
+      color: white;
+      align-self: flex-end;
+    }
+
+    .message-input {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background-color: #f8f8f8;
+    }
+
+    .message-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    .message-input button {
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .message-input button:active {
+      transform: scale(0.95);
+    }
+	        .custom-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        .custom-button img {
+            width: 40px;
+            height: 40px;
+        }
+        .custom-button img:hover {
+            opacity: 0.8;
+        }
+
+  </style>
+</head>
+<body>
+ <a href="http://jadeisdead.com/" target="_blank" class="custom-button">
+        <img src="https://media.tenor.com/yso9Ncqwm5UAAAAi/click-subscribe.gif" alt="Custom Button">
+    </a>
+  <div class="wrapper">
+    <div class="container">
+      <div class="card" id="card">
+        <div class="card-content">
+          <h2 class="name">John Doe</h2>
+          <p class="bio">Loves hiking, coffee, and coding.</p>
+        </div>
+      </div>
+      <div class="match-notification" id="matchNotification">
+        <h2>It's a Match!</h2>
+        <img id="matchImage" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Match Image">
+        <p id="matchText">You and John Doe liked each other.</p>
+        <button class="send-message" id="sendMessage">Send Message</button>
+      </div>
+    </div>
+    <div class="buttons">
+      <button id="dislike">👎</button>
+      <button id="like">❤️</button>
+    </div>
+  </div>
+
+  <!-- Message Simulator -->
+  <div class="message-simulator" id="messageSimulator">
+    <div class="message-header">
+      <span id="matchedUserName">John Doe</span>
+    </div>
+    <div class="message-container" id="messageContainer">
+      <!-- Messages will be dynamically added here -->
+    </div>
+    <div class="message-input">
+      <input type="text" id="messageInput" placeholder="Type a message...">
+      <button id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const card = document.getElementById('card');
+    const likeButton = document.getElementById('like');
+    const dislikeButton = document.getElementById('dislike');
+    const matchNotification = document.getElementById('matchNotification');
+    const sendMessageButton = document.getElementById('sendMessage');
+    const messageSimulator = document.getElementById('messageSimulator');
+    const matchedUserName = document.getElementById('matchedUserName');
+    const messageContainer = document.getElementById('messageContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const matchImage = document.getElementById('matchImage');
+    const matchText = document.getElementById('matchText');
+
+    const profiles = [
+      {
+        name: "John Doe",
+        bio: "Loves hiking, coffee, and coding.",
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        liked: false,
+        genericReplies: [
+          "Hi there! How's it going?",
+          "Hello! What's up?",
+          "Good day! How can I help you?",
+        ],
+        dynamicReplies: [
+          "I love hiking too! Where's your favorite spot?",
+          "Coffee is life! What's your go-to order?",
+          "Coding is so much fun. What languages do you use?",
+        ],
+      },
+      {
+        name: "Gandalf the LITTY",
+        bio: "Enjoys rages and fucking fairys.",
+        image: "https://i.pinimg.com/736x/79/a2/45/79a245429fd790210c0e510882034a84.jpg",
+        liked: false,
+        genericReplies: [
+          "wassussssssppppppp",
+          "good day slimington",
+          "im  to high for this",
+		  "this 500 year old dick still works",
+		  "smoked that glimmerroot crystal and split the timeline broski",
+        ],
+        dynamicReplies: [
+          "drank a whole keg yesterday and lit a hobbit on fire yur",
+          "you ever wake up butt ass naked in a goblin jail with no memories?",
+          "one time me and bilbo got crossed off coke and beer and and we ended up climbing Mount Doom in our socks just for the fun of it. I swear, we thought we were invincible. The whole time, Bilbo was singing ‘The Road Goes Ever On’ and making up weird lyrics about the elven bdsm. By the time we got halfway up, we were laughing so hard that I swear we might’ve fallen off the mountain, but Bilbo just said, 'It’s not the fall that matters, it’s the adventure my broski!' So, we kept going. ",
+        ],
+      },
+      {
+        name: "gordogala the world eater",
+        bio: "Fan of books and cats.",
+        image: "https://i.pinimg.com/736x/1e/31/51/1e3151c09c88c99a8616787db8d16021.jpg",
+        liked: false,
+        genericReplies: [
+          "⍑╎",
+          "∴⍑𝙹 ↸╎ᓭℸ ̣ ⚍∷ʖ ᒲᒷ",
+          "⎓⚍ᓵꖌ ||𝙹⚍",
+        ],
+        dynamicReplies: [
+          "!¡╎ᓭᓭ 𝙹⎓⎓",
+          "ᓵᔑℸ ̣ ᔑ∷ᒷ ᓭ𝙹 ᓵ⚍ℸ ̣ ᒷ",
+          "||𝙹⚍∷ !¡∷ᒷℸ ̣ ℸ ̣ ||",
+		  "∴ᔑリリᔑ ʖ⚍|| ᓭ𝙹ᒲᒷ ᓵ∷ᔑᓵꖌ",
+        ],
+      },
+      {
+        name: "Skribbles",
+        bio: "got any crystals bro?",
+        image: "https://i.pinimg.com/736x/9e/a7/05/9ea7055bb3cd68ae733f01b47913adf8.jpg",
+        liked: false,
+        genericReplies: [
+          "bro im feining please give me meth",
+          "i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it i need it ",
+          "il suck your dick for meth",
+        ],
+        dynamicReplies: [
+          "we should go steal copper",
+          "ill suck your dick for meth",
+          "please bro im feining please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please please ",
+        ],
+      },
+    ];
+
+    let currentProfileIndex = 0;
+    let matchedProfile = null;
+
+    function updateProfile() {
+      const profile = profiles[currentProfileIndex];
+      card.style.backgroundImage = `url(${profile.image})`;
+      card.querySelector('.name').textContent = profile.name;
+      card.querySelector('.bio').textContent = profile.bio;
+    }
+
+    likeButton.addEventListener('click', () => {
+      const profile = profiles[currentProfileIndex];
+      profile.liked = true;
+      matchedProfile = profile; // Set the matched profile
+      checkForMatch(profile);
+      swipeCard('like');
+    });
+
+    dislikeButton.addEventListener('click', () => {
+      swipeCard('dislike');
+    });
+
+    function swipeCard(action) {
+      card.style.transform = action === 'like' ? 'translateX(100%) rotate(30deg)' : 'translateX(-100%) rotate(-30deg)';
+      card.style.opacity = '0';
+      setTimeout(() => {
+        currentProfileIndex = (currentProfileIndex + 1) % profiles.length;
+        updateProfile();
+        card.style.transform = 'translateX(0) rotate(0)';
+        card.style.opacity = '1';
+      }, 300);
+    }
+
+    function checkForMatch(profile) {
+      if (profile.liked) {
+        matchNotification.querySelector('h2').textContent = "It's a Match!";
+        matchImage.src = profile.image;
+        matchText.textContent = `You and ${profile.name} liked each other.`;
+        matchNotification.style.display = 'flex';
+        setTimeout(() => {
+          matchNotification.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Open Message Simulator
+    sendMessageButton.addEventListener('click', () => {
+      if (matchedProfile) {
+        matchedUserName.textContent = matchedProfile.name;
+        messageSimulator.style.display = 'flex';
+        matchNotification.style.display = 'none';
+        messageContainer.innerHTML = ''; // Clear previous messages
+      }
+    });
+
+    // Send Message
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (message) {
+        addMessage(message, 'sent');
+        messageInput.value = '';
+        setTimeout(() => {
+          const reply = getReply(message, matchedProfile.genericReplies, matchedProfile.dynamicReplies);
+          addMessage(reply, 'received');
+        }, 1000);
+      }
+    });
+
+    // Add Message to Chat
+    function addMessage(text, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', type);
+      messageDiv.textContent = text;
+      messageContainer.appendChild(messageDiv);
+      messageContainer.scrollTop = messageContainer.scrollHeight; // Auto-scroll to bottom
+    }
+
+    // Get Reply Based on Message
+    function getReply(message, genericReplies, dynamicReplies) {
+      const lowerCaseMessage = message.toLowerCase();
+      const genericTriggers = ["hi", "hello", "good day", "how are you", "what's up"];
+
+      // Check if the message matches any generic triggers
+      if (genericTriggers.some(trigger => lowerCaseMessage.includes(trigger))) {
+        // Return a random generic reply
+        const randomIndex = Math.floor(Math.random() * genericReplies.length);
+        return genericReplies[randomIndex];
+      } else {
+        // Return a random dynamic reply
+        const randomIndex = Math.floor(Math.random() * dynamicReplies.length);
+        return dynamicReplies[randomIndex];
+      }
+    }
+
+    // Initialize the first profile
+    updateProfile();
+  </script>
+</body>
+</html>
